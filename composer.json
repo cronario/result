@@ -27,7 +27,7 @@
         "test": "phpunit"
     },
     "bin": [
-        "phpunit"
+        "result"
     ],
     "extra": {
         "branch-alias": {

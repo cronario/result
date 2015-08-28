@@ -419,8 +419,6 @@ class ResultException extends BaseException
     }
 
     /**
-     * @param string|null $path
-     *
      * @return array
      * @throws InvalidArgumentException
      */

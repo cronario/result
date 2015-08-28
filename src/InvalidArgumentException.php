@@ -2,7 +2,6 @@
 
 namespace Result;
 
-class InvalidArgumentException extends BaseException
-    implements ExceptionInterface
+class InvalidArgumentException extends BaseException implements ExceptionInterface
 {
 }

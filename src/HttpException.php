@@ -5,11 +5,9 @@ namespace Result;
 
 class HttpException extends ResultException
 {
-    // [Informational 1xx]
     const HTTP_CONTINUE = 100;
     const HTTP_SWITCHING_PROTOCOLS = 101;
 
-    // [Successful 2xx]
     const HTTP_OK = 200;
     const HTTP_CREATED = 201;
     const HTTP_ACCEPTED = 202;
@@ -18,7 +16,6 @@ class HttpException extends ResultException
     const HTTP_RESET_CONTENT = 205;
     const HTTP_PARTIAL_CONTENT = 206;
 
-    // [Redirection 3xx]
     const HTTP_MULTIPLE_CHOICES = 300;
     const HTTP_MOVED_PERMANENTLY = 301;
     const HTTP_FOUND = 302;
@@ -28,7 +25,6 @@ class HttpException extends ResultException
     const HTTP_UNUSED = 306;
     const HTTP_TEMPORARY_REDIRECT = 307;
 
-    // [Client Error 4xx]
     const HTTP_BAD_REQUEST = 400;
     const HTTP_UNAUTHORIZED = 401;
     const HTTP_PAYMENT_REQUIRED = 402;
@@ -48,7 +44,6 @@ class HttpException extends ResultException
     const HTTP_REQUESTED_RANGE_NOT_SATISFIABLE = 416;
     const HTTP_EXPECTATION_FAILED = 417;
 
-    // [Server Error 5xx]
     const HTTP_INTERNAL_SERVER_ERROR = 500;
     const HTTP_NOT_IMPLEMENTED = 501;
     const HTTP_BAD_GATEWAY = 502;
@@ -58,7 +53,6 @@ class HttpException extends ResultException
 
     public static $results
         = array(
-            // [Informational 1xx]
             self::HTTP_CONTINUE                        => array(
                 'msg'      => 'Continue',
                 'httpCode' => 100,
@@ -67,7 +61,6 @@ class HttpException extends ResultException
                 'msg'      => 'Switching Protocols',
                 'httpCode' => 101,
             ),
-            // [Successful 2xx]
             self::HTTP_OK                              => array(
                 'msg'      => 'OK',
                 'httpCode' => 200,
@@ -202,7 +195,6 @@ class HttpException extends ResultException
                 'msg'      => 'Expectation Failed',
                 'httpCode' => 417,
             ),
-            // [Server Error 5xx]
             self::HTTP_INTERNAL_SERVER_ERROR           => array(
                 'msg'      => 'Internal Server Error',
                 'httpCode' => 500,

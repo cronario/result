@@ -1,6 +1,6 @@
 <?php
 
-namespace Ik\Lib\Test\Exception;
+namespace Result\Test;
 
 use Result\MapBuilder;
 

@@ -19,7 +19,7 @@ matrix:
 install:
   - export PATH="$HOME/.composer/vendor/bin:$PATH"
   - composer install
-  
+
 cache:
   directories:
     - vendor

@@ -1,13 +1,8 @@
 {
-    "name": "ik/lib",
-    "description": "Interkassa libs",
+    "name": "cronario/result",
+    "description": "Result exceptions",
     "type": "library",
-    "dist": {
-        "url": "git@stash.interkassa.com:ik/lib.git",
-        "type": "git"
-    },
     "keywords": [
-        "interkassa",
         "results",
         "exceptions"
     ],

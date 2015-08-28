@@ -1,0 +1,42 @@
+{
+    "name": "ik/lib",
+    "description": "Interkassa libs",
+    "type": "library",
+    "dist": {
+        "url": "git@stash.interkassa.com:ik/lib.git",
+        "type": "git"
+    },
+    "keywords": [
+        "interkassa",
+        "results",
+        "exceptions"
+    ],
+    "require": {
+        "php" : ">=5.3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit" : "4.*"
+
+    },
+    "autoload": {
+        "psr-4": {
+            "Result\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Result\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "bin": [
+        "phpunit"
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1-dev"
+        }
+    }
+}

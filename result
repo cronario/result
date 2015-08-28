@@ -1,0 +1,81 @@
+#!/usr/bin/env php
+<?php
+
+function __autoload($class)
+{
+    foreach (explode(PATH_SEPARATOR, get_include_path()) as $path) {
+        $file
+            =
+            $path . DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR,
+                $class) . '.php';
+        if (file_exists($file)) {
+            include $file;
+            return null;
+        }
+    }
+}
+
+$shortopts = "a:"; // autoloader
+$shortopts .= "o:"; // output
+$shortopts .= "s::"; // path where to find
+$shortopts .= "h"; // display help
+
+$longopts = [
+    "autoloader:",
+    "output:",
+    "search::",
+    "help"
+];
+
+
+$options = getopt($shortopts, $longopts);
+
+$shortoptsClear = str_split(str_replace(':', '', $shortopts));
+
+foreach ($options as $key => $option) {
+    if (in_array($key, $shortoptsClear)) {
+        $index = array_search($key, $shortoptsClear);
+        $longKey = $longopts[$index];
+        $longKeyClear = str_replace(':', '', $longKey);
+        $options[$longKeyClear] = $option;
+    }
+}
+
+if (array_key_exists('help', $options)) {
+    exit("Usage:\n\t ./" . basename(__FILE__) . "
+        --help|-h                           Display this help
+        --autoloader|-a =  path             Set autoloader
+        --output|-o     =  path             Output file
+        --search|-s     = 'path1 path2'     Path where to search Result classes\n");
+}
+
+if (isset($options['autoloader'])) {
+    require_once $options['autoloader'];
+} else {
+    exit("Provide autoloader." . PHP_EOL);
+}
+
+if (isset($options['output'])) {
+    $output = $options['output'];
+    if (!file_exists($output)) {
+        if (false === touch($output)) {
+            exit("Can not create output file." . PHP_EOL);
+        }
+    } elseif (!is_readable($output)) {
+        exit("Output file $output can not be read." . PHP_EOL);
+    } elseif (!is_writable($output)) {
+        exit("Output file $output can not be writen." . PHP_EOL);
+    }
+} else {
+    exit('Provide output file.' . PHP_EOL);
+}
+
+if (isset($options['search'])) {
+    $search = $options['search'];
+    $search = explode(' ', $search);
+} else {
+    $search = ['.']; // in current directory
+}
+
+
+\Ik\Lib\ResultMapBuilder::build($output, $search);

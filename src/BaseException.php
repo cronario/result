@@ -78,12 +78,4 @@ class BaseException extends \Exception implements ExceptionInterface
 
         return $result;
     }
-
-    /**
-     * @return mixed
-     */
-    public function toXml()
-    {
-        return \Ik\Lib\Xml::toXml($this->toArray());
-    }
 }

@@ -40,6 +40,6 @@ class ResultException extends \Result\ResultException
 
     public function isCustomStatus()
     {
-        return ($this->_status === self::STATUS_CUSTOM);
+        return ($this->status === self::STATUS_CUSTOM);
     }
 }

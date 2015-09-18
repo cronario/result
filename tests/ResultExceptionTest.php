@@ -129,9 +129,6 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    /**
-     * @throws \Result\RuntimeException
-     */
     public function testFactory()
     {
         $result = ResultException::factory(
@@ -153,5 +150,39 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
             $this->assertEquals($str, $result->getMessage());
             $this->assertEquals(ResultException::STATUS_ERROR, $result->getStatus());
         }
+    }
+
+    public function testFactorySuccess()
+    {
+        $result = ResultException::factory(ResultException::R_SUCCESS);
+        $this->assertInstanceOf('\\Result\\ResultException', $result);
+        $this->assertTrue($result->isSuccess());
+    }
+
+    /**
+     * @expectedException \Result\InvalidArgumentException
+     */
+    public function testFactoryUnknownCode()
+    {
+        ResultException::factory(123456);
+    }
+
+    public function testToString()
+    {
+        $result = ResultException::factory(ResultException::R_SUCCESS);
+        $this->assertStringEndsWith('R_SUCCESS', (string) $result);
+    }
+
+    public function testToArray()
+    {
+        $result = ResultException::factory(ResultException::R_SUCCESS);
+        $this->assertArrayHasKey('globalCode', $result->toArray());
+        $this->assertArrayHasKey('data', $result->toArray());
+    }
+
+    public function testBuildGlobalCodeSuccess()
+    {
+        $code = ResultException::buildGlobalCode(ResultException::R_SUCCESS);
+        $this->assertEquals(ResultException::R_SUCCESS, $code);
     }
 }

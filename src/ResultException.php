@@ -65,30 +65,30 @@ class ResultException extends BaseException
      * REFLECTION
      ******************************************************************************/
 
-    static protected $_reflections;
-    static protected $_reflectionConstants;
-    static protected $_translatorFunction = '_t';
+    static protected $reflections;
+    static protected $reflectionConstants;
+    static protected $translatorFunction = '_t';
 
-    protected $_messageAdmin;
+    protected $messageAdmin;
     /**
      * Converts any exception to internal error ResultException
      *
-     * @var int|string
+     * @var int
      */
-    protected $_globalCode;
+    protected $globalCode;
     /******************************************************************************
      * EXCEPTION
      ******************************************************************************/
 
-    protected $_innerException;
+    protected $innerException;
     /**
      * @var string
      */
-    protected $_status = self::STATUS_FAILURE;
+    protected $status = self::STATUS_FAILURE;
     /**
      * @var array
      */
-    protected $_data = [];
+    protected $data = [];
 
     /**
      * @param string|int|\Exception $code
@@ -103,7 +103,6 @@ class ResultException extends BaseException
         $data = null,
         \Exception $innerException = null
     ) {
-        // Init code
         if ($code === null) {
             throw new InvalidArgumentException("Empty result code arg");
         } elseif (is_int($code)) {
@@ -111,16 +110,16 @@ class ResultException extends BaseException
             if (isset(static::$results[$code])
                 && self::R_SUCCESS !== $code
             ) {
-                $this->_initData(static::$results);
+                $this->initData(static::$results);
             } elseif (isset(self::$results[$code])) {
-                $this->_initData(self::$results);
+                $this->initData(self::$results);
             }
         } elseif ($code instanceof \Exception) {
-            $this->_status = self::STATUS_ERROR;
+            $this->status = self::STATUS_ERROR;
             $this->code = self::E_INTERNAL;
             $this->message = $code->getMessage();
             $this->setData('innerCode', $code->getCode());
-            $this->_globalCode = self::buildGlobalCode($this);
+            $this->globalCode = self::buildGlobalCode($this);
             return $this;
         }
 
@@ -132,7 +131,7 @@ class ResultException extends BaseException
         }
 
         // Build global code
-        $this->_globalCode = self::buildGlobalCode($this);
+        $this->globalCode = self::buildGlobalCode($this);
 
         // Init message
         if (empty($this->message)) {
@@ -160,7 +159,7 @@ class ResultException extends BaseException
 
         // Init status
         if ($this->hasData(self::P_STATUS)) {
-            $this->_status = $this->getData(self::P_STATUS);
+            $this->status = $this->getData(self::P_STATUS);
         }
 
         // Unset system properties
@@ -176,7 +175,7 @@ class ResultException extends BaseException
     /**
      * @param $results
      */
-    protected function _initData(&$results)
+    protected function initData(&$results)
     {
         if (is_array($results[$this->code])) {
             $this->addData($results[$this->code]);
@@ -209,7 +208,7 @@ class ResultException extends BaseException
      * @param      $result
      * @param null $code
      *
-     * @return int|string
+     * @return int
      */
     public static function buildGlobalCode($result, $code = null)
     {
@@ -234,7 +233,7 @@ class ResultException extends BaseException
 
     /** Returns class index by class name
      *
-     * @param $class
+     * @param $class string Name of class
      *
      * @throws RuntimeException
      * @return null|int
@@ -257,15 +256,15 @@ class ResultException extends BaseException
     {
         $className = get_class($this);
 
-        if (!isset(self::$_reflectionConstants[$className])) {
-            self::$_reflectionConstants[$className] = self::getReflection($this)
+        if (!isset(self::$reflectionConstants[$className])) {
+            self::$reflectionConstants[$className] = self::getReflection($this)
                 ->getConstants();
         }
 
         if ($key === null) {
-            return self::$_reflectionConstants[$className];
+            return self::$reflectionConstants[$className];
         } else {
-            return array_search($key, self::$_reflectionConstants[$className],
+            return array_search($key, self::$reflectionConstants[$className],
                 true);
         }
     }
@@ -279,12 +278,12 @@ class ResultException extends BaseException
     {
         $reflectionClass = get_class($object);
 
-        if (!isset(self::$_reflections[$reflectionClass])) {
-            self::$_reflections[$reflectionClass]
+        if (!isset(self::$reflections[$reflectionClass])) {
+            self::$reflections[$reflectionClass]
                 = new \ReflectionClass($object);
         }
 
-        return self::$_reflections[$reflectionClass];
+        return self::$reflections[$reflectionClass];
     }
 
     /**
@@ -295,7 +294,7 @@ class ResultException extends BaseException
     public static function buildMessage(ResultException $result)
     {
         // try to translate message
-        $translateKey = self::TRANSLATE_KEY_PREFIX . $result->_globalCode;
+        $translateKey = self::TRANSLATE_KEY_PREFIX . $result->globalCode;
         $message = self::translate($translateKey);
 
         return empty($message) ? $result->getAlias() : $message;
@@ -320,27 +319,29 @@ class ResultException extends BaseException
      */
     public function hasData($key)
     {
-        return isset($this->_data[$key]);
+        return isset($this->data[$key]);
     }
 
     /**
      * @param null $key
      * @param null $default
      *
-     * @return array|null
+     * @return array|null|string
      */
     public function getData($key = null, $default = null)
     {
         if ($key === null) {
-            return $this->_data;
+            return $this->data;
         }
 
-        return isset($this->_data[$key]) ? $this->_data[$key] : $default;
+        return isset($this->data[$key]) ? $this->data[$key] : $default;
     }
 
     /**
      * @param $key
      * @param $value
+     *
+     * @return $this
      */
     public function setData($key, $value)
     {
@@ -353,12 +354,19 @@ class ResultException extends BaseException
         }
 
         if ($key === self::P_MESSAGE_ADMIN) {
-            return $this->_messageAdmin = $value;
+            return $this->messageAdmin = $value;
         }
 
-        $this->_data[$key] = $value;
+        $this->data[$key] = $value;
+
+        return $this;
     }
 
+    /**
+     * @param $messageArg
+     *
+     * @return $this|null
+     */
     public function setMessageArg($messageArg)
     {
 
@@ -367,8 +375,8 @@ class ResultException extends BaseException
         }
 
         if (empty($messageArg)
-            || (!empty($this->_data[self::P_MESSAGE_ARG])
-                && $this->_data[self::P_MESSAGE_ARG] === $messageArg)
+            || (!empty($this->data[self::P_MESSAGE_ARG])
+                && $this->data[self::P_MESSAGE_ARG] === $messageArg)
         ) {
             return null;
         }
@@ -382,7 +390,9 @@ class ResultException extends BaseException
         }
         $this->message = $formattedMessage;
 
-        $this->_data[self::P_MESSAGE_ARG] = $messageArg;
+        $this->data[self::P_MESSAGE_ARG] = $messageArg;
+
+        return $this;
     }
 
     /**
@@ -390,14 +400,14 @@ class ResultException extends BaseException
      */
     public function unsetData($key)
     {
-        unset($this->_data[$key]);
+        unset($this->data[$key]);
     }
 
     /**
      * @param      $globalCode
      * @param null $data
      *
-     * @return mixed
+     * @return ResultException
      * @throws RuntimeException
      */
     public static function factory($globalCode, $data = null)
@@ -415,7 +425,7 @@ class ResultException extends BaseException
             return new $resultClass($code, $data);
         }
 
-        throw new RuntimeException("Unknown result code [$globalCode]");
+        throw new InvalidArgumentException("Unknown result code [$globalCode]");
     }
 
     /**
@@ -466,7 +476,7 @@ class ResultException extends BaseException
      */
     public function getGlobalCode()
     {
-        return $this->_globalCode;
+        return $this->globalCode;
     }
 
 
@@ -479,7 +489,7 @@ class ResultException extends BaseException
     {
         $result = parent::toArray($packed);
 
-        $result['data'] = $this->_data;
+        $result['data'] = $this->data;
         $result['globalCode'] = $this->getGlobalCode();
         $result['messageAdm'] = $this->getMessageAdmin();
 
@@ -488,21 +498,21 @@ class ResultException extends BaseException
 
     public function getMessageAdmin()
     {
-        if ($this->_messageAdmin === null) {
-            $this->_messageAdmin = self::buildMessageAdmin($this);
+        if ($this->messageAdmin === null) {
+            $this->messageAdmin = self::buildMessageAdmin($this);
         }
 
-        return $this->_messageAdmin;
+        return $this->messageAdmin;
     }
 
-    protected function _setMessageAdmin($message)
+    protected function setMessageAdmin($message)
     {
-        $this->_messageAdmin = $message;
+        $this->messageAdmin = $message;
     }
 
     public static function buildMessageAdmin(ResultException $result)
     {
-        $translateKey = self::TRANSLATE_KEY_PREFIX_ADMIN . $result->_globalCode;
+        $translateKey = self::TRANSLATE_KEY_PREFIX_ADMIN . $result->globalCode;
         $message = self::translate($translateKey);
 
         return $message;
@@ -510,7 +520,7 @@ class ResultException extends BaseException
 
     public function getInnerException()
     {
-        return $this->_innerException;
+        return $this->innerException;
     }
 
     /**
@@ -518,7 +528,7 @@ class ResultException extends BaseException
      */
     public function setInnerException(\Exception $exception)
     {
-        $this->_innerException = $exception;
+        $this->innerException = $exception;
     }
 
     /**
@@ -526,7 +536,7 @@ class ResultException extends BaseException
      */
     public function hasInnerException()
     {
-        return !empty($this->_innerException);
+        return !empty($this->innerException);
     }
 
     /******************************************************************************
@@ -538,7 +548,7 @@ class ResultException extends BaseException
      */
     public function getStatus()
     {
-        return $this->_status;
+        return $this->status;
     }
 
     /**
@@ -546,7 +556,7 @@ class ResultException extends BaseException
      */
     public function setStatus($status)
     {
-        $this->_status = $status;
+        $this->status = $status;
     }
 
     /**
@@ -554,7 +564,7 @@ class ResultException extends BaseException
      */
     public function isSuccess()
     {
-        return ($this->_status === self::STATUS_SUCCESS);
+        return ($this->status === self::STATUS_SUCCESS);
     }
 
     /**
@@ -562,7 +572,7 @@ class ResultException extends BaseException
      */
     public function isFailure()
     {
-        return ($this->_status === self::STATUS_FAILURE);
+        return ($this->status === self::STATUS_FAILURE);
     }
 
     /**
@@ -570,7 +580,7 @@ class ResultException extends BaseException
      */
     public function isError()
     {
-        return ($this->_status === self::STATUS_ERROR);
+        return ($this->status === self::STATUS_ERROR);
     }
 
     /**
@@ -578,7 +588,7 @@ class ResultException extends BaseException
      */
     public function isIgnoreLogging()
     {
-        return !empty($this->_data[self::P_IGNORE_LOGGING]);
+        return !empty($this->data[self::P_IGNORE_LOGGING]);
     }
 
     /**
@@ -586,7 +596,7 @@ class ResultException extends BaseException
      */
     public function clearData()
     {
-        $this->_data = [];
+        $this->data = [];
     }
 
     /**
@@ -594,7 +604,7 @@ class ResultException extends BaseException
      */
     public function countData()
     {
-        return count($this->_data);
+        return count($this->data);
     }
 
     /******************************************************************************
@@ -608,7 +618,7 @@ class ResultException extends BaseException
      */
     public static function setTranslatorFunction($translator)
     {
-        static::$_translatorFunction = $translator;
+        static::$translatorFunction = $translator;
     }
 
     /**
@@ -618,7 +628,7 @@ class ResultException extends BaseException
      */
     public static function getTranslatorFunction()
     {
-        return static::$_translatorFunction;
+        return static::$translatorFunction;
     }
 
     /**
@@ -630,9 +640,7 @@ class ResultException extends BaseException
     {
         if (function_exists(static::getTranslatorFunction())) {
             $translated = call_user_func(static::getTranslatorFunction(), $key);
-            if ($translated != $key) {
-                return $translated;
-            }
+            return $translated;
         } else {
             return '';
         }

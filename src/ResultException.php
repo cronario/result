@@ -126,7 +126,7 @@ class ResultException extends BaseException
         // Check code range & exists as const
         if ($code > 1000) {
             throw new OutOfRangeException("Result code [$code] out of range");
-        } elseif ($this->getConstants($this->code) === false) {
+        } elseif ($this->getConstant($this->code) === false) {
             throw new InvalidArgumentException("Invalid result code [$code]");
         }
 
@@ -248,25 +248,19 @@ class ResultException extends BaseException
     }
 
     /**
-     * @param null $key
+     * @param string $key
      *
      * @return mixed
      */
-    public function getConstants($key = null)
+    public function getConstant($key)
     {
         $className = get_class($this);
 
         if (!isset(self::$reflectionConstants[$className])) {
-            self::$reflectionConstants[$className] = self::getReflection($this)
-                ->getConstants();
+            self::$reflectionConstants[$className] = self::getReflection($this)->getConstants();
         }
 
-        if ($key === null) {
-            return self::$reflectionConstants[$className];
-        } else {
-            return array_search($key, self::$reflectionConstants[$className],
-                true);
-        }
+        return array_search($key, self::$reflectionConstants[$className], true);
     }
 
     /**
@@ -308,7 +302,7 @@ class ResultException extends BaseException
         if ($this->hasData(self::P_ALIAS)) {
             return $this->getData(self::P_ALIAS);
         } else {
-            return $this->getConstants($this->code);
+            return $this->getConstant($this->code);
         }
     }
 
@@ -363,7 +357,7 @@ class ResultException extends BaseException
     }
 
     /**
-     * @param $messageArg
+     * @param $messageArg array|string
      *
      * @return $this|null
      */
@@ -375,8 +369,7 @@ class ResultException extends BaseException
         }
 
         if (empty($messageArg)
-            || (!empty($this->data[self::P_MESSAGE_ARG])
-                && $this->data[self::P_MESSAGE_ARG] === $messageArg)
+            || $this->getData(self::P_MESSAGE_ARG) === $messageArg
         ) {
             return null;
         }
@@ -384,6 +377,7 @@ class ResultException extends BaseException
         $formattedMessage = vsprintf($this->message, $messageArg);
 
         if ($formattedMessage === $this->message) {
+            // there are no any %s so we just append params
             foreach ($messageArg as $message) {
                 $formattedMessage .= ' [' . $message . ']';
             }
@@ -481,13 +475,12 @@ class ResultException extends BaseException
 
 
     /**
-     * @param bool $packed
      *
      * @return array
      */
-    public function toArray($packed = false)
+    public function toArray()
     {
-        $result = parent::toArray($packed);
+        $result = parent::toArray();
 
         $result['data'] = $this->data;
         $result['globalCode'] = $this->getGlobalCode();
@@ -647,7 +640,11 @@ class ResultException extends BaseException
     {
         if (is_callable(static::getTranslatorFunction())) {
             $translated = call_user_func(static::getTranslatorFunction(), $key);
-            return $translated;
+            if($key !== $translated){
+                return $translated;
+            } else {
+                return '';
+            }
         } else {
             return '';
         }

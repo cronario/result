@@ -132,15 +132,9 @@ class MapBuilder
     /**
      * Reads result map from file
      */
-    public static function readMap($file = null)
+    public static function readMap()
     {
-        if(null===$file){
-            $fileData = include self::$_file;
-        } else {
-            $fileData = include $file;
-            self::setFile($file);
-        }
+        $fileData = include self::$_file;
         self::$_map = !is_array($fileData) ? self::$_map : $fileData;
-
     }
 }

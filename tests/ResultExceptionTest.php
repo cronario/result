@@ -172,7 +172,7 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
 
     public function testMsgArg()
     {
-        $result = new ResultException(ResultException::R_SUCCESS,
+        $result = new ResultException(ResultException::TEST_RESULT,
             [
                 ResultException::P_MESSAGE => 'Test %s',
                 ResultException::P_MESSAGE_ARG => 'argument'
@@ -182,23 +182,35 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
 
     public function testMsgArgMissingFormat()
     {
-        $result = new ResultException(ResultException::R_SUCCESS,
+        $result = new ResultException(ResultException::TEST_RESULT,
             [
                 ResultException::P_MESSAGE => 'Test',
-                ResultException::P_MESSAGE_ARG => ['argument']
+                ResultException::P_MESSAGE_ARG => 'argument'
             ]);
         $this->assertStringEndsWith('[argument]', $result->getMessage());
     }
 
-    public function testMsgArgNull()
+    public function testMsgArgUnchanged()
     {
-        $result = new ResultException(ResultException::R_SUCCESS,
+        $result = new ResultException(ResultException::TEST_RESULT,
             [
                 ResultException::P_MESSAGE => 'Test %s',
                 ResultException::P_MESSAGE_ARG => 'argument'
             ]);
 
-        $this->assertNull($result->setMessageArg('argument'));
+        $this->assertEquals('Test argument', $result->getMessage());
+    }
+
+    public function testMsgArgParam()
+    {
+        $result = new ResultException(ResultException::TEST_MSG_ARG, 'argument');
+        $this->assertEquals('Test argument', $result->getMessage());
+    }
+
+    public function testMsgArgParamPreset()
+    {
+        $result = new ResultException(ResultException::TEST_PRESET_MSG_ARG);
+        $this->assertEquals('Test argument', $result->getMessage());
     }
 
     public function testInnerException()
@@ -259,13 +271,6 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
         $this->assertStringStartsWith('New', $result->getMessageAdmin());
     }
 
-    public function testTranslator()
-    {
-        ResultException::setTranslatorFunction('\\Result\\Test\\ResultException::t');
-        $result = new ResultException(ResultException::TEST_TRANSLATE_STRING);
-        $this->assertStringEndsWith('-translated', $result->getMessage());
-    }
-
     public function testData()
     {
         $result = new ResultException(ResultException::R_SUCCESS,
@@ -285,5 +290,31 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
     public function testClassIndexError()
     {
          ResultException::getClassIndex('Unknown');
+    }
+
+    public function testIgnoreLogging()
+    {
+        $result = new ResultException(ResultException::TEST_IGNORE);
+        $this->assertTrue($result->isIgnoreLogging());
+    }
+
+    public function testMessageAlias()
+    {
+        $result = new ResultException(ResultException::TEST_ALIAS);
+        $this->assertEquals('Alias', $result->getMessage());
+    }
+
+    public function testTranslator()
+    {
+        ResultException::setTranslatorFunction('\\Result\\Test\\ResultException::t');
+        $result = new ResultException(ResultException::TEST_TRANSLATE_STRING);
+        $this->assertStringEndsWith('-translated', $result->getMessage());
+    }
+
+    public function testTranslatorFail()
+    {
+        ResultException::setTranslatorFunction('\\Result\\Test\\ResultException::tUnchanged');
+        $result = new ResultException(ResultException::TEST_TRANSLATE_STRING);
+        $this->assertStringStartsWith('TEST', $result->getMessage());
     }
 }

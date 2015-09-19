@@ -8,16 +8,6 @@ namespace Result;
  */
 class BaseException extends \Exception implements ExceptionInterface
 {
-    public static $packKeyMap
-        = [
-            'class'    => 'c',
-            'code'     => 'cd',
-            'message'  => 'm',
-            'file'     => 'f',
-            'line'     => 'l',
-            'trace'    => 't',
-            'previous' => 'p',
-        ];
 
     /**
      * @param string     $message
@@ -34,6 +24,7 @@ class BaseException extends \Exception implements ExceptionInterface
             $code = 0;
         } elseif (!is_numeric($code)) {
             $message = sprintf($message, $code);
+            $code = 0;
         }
 
         parent::__construct($message, $code, $previous);
@@ -48,11 +39,9 @@ class BaseException extends \Exception implements ExceptionInterface
     }
 
     /**
-     * @param bool $packed
-     *
      * @return array
      */
-    public function toArray($packed = false)
+    public function toArray()
     {
         $result = [
             'class'   => get_class($this),
@@ -69,11 +58,6 @@ class BaseException extends \Exception implements ExceptionInterface
             } else {
                 $result['previous'] = (array)$previous;
             }
-        }
-
-        if ($packed) {
-            $result = array_combine(array_merge($result, self::$packKeyMap),
-                $result);
         }
 
         return $result;

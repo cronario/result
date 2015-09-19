@@ -89,7 +89,7 @@ class HttpException extends ResultException
                 'msg'      => 'Partial Content',
                 'httpCode' => 206,
             ),
-            // [Redirection 3xx]
+
             self::HTTP_MULTIPLE_CHOICES                => array(
                 'msg'      => 'Multiple Choices',
                 'httpCode' => 300,
@@ -122,7 +122,7 @@ class HttpException extends ResultException
                 'msg'      => 'Temporary Redirect',
                 'httpCode' => 307,
             ),
-            // [Client Error 4xx]
+
             self::HTTP_BAD_REQUEST                     => array(
                 'msg'      => 'Bad Request',
                 'httpCode' => 400,

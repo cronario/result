@@ -19,7 +19,6 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
         ]);
     }
 
-
     /**
      * @expectedException \Result\InvalidArgumentException
      */
@@ -47,86 +46,71 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
 
     public function testCode()
     {
-        try {
-            throw new ResultException(ResultException::R_SUCCESS);
-        } catch (ResultException $e) {
-            $this->assertEquals(ResultException::R_SUCCESS, $e->getCode());
-        }
+        $result = new ResultException(ResultException::R_SUCCESS);
+        $this->assertEquals(ResultException::R_SUCCESS, $result->getCode());
     }
 
     public function testStatusSuccess()
     {
-        try {
-            throw new ResultException(ResultException::R_SUCCESS);
-        } catch (ResultException $e) {
-            $this->assertTrue($e->isSuccess());
-        }
+        $result = new ResultException(ResultException::R_SUCCESS);
+        $this->assertTrue($result->isSuccess());
     }
 
     public function testStatusFailure()
     {
-        try {
-            throw new ResultException(ResultException::R_FAILURE);
-        } catch (ResultException $e) {
-            $this->assertTrue($e->isFailure());
-        }
+        $result = new ResultException(ResultException::R_FAILURE);
+        $this->assertTrue($result->isFailure());
     }
 
     public function testStatusError()
     {
-        try {
-            throw new ResultException(ResultException::E_INTERNAL);
-        } catch (ResultException $e) {
-            $this->assertTrue($e->isError());
-        }
+        $result = new ResultException(ResultException::E_INTERNAL);
+        $this->assertTrue($result->isError());
     }
 
     public function testFailMessage()
     {
-        try {
-            throw new ResultException(ResultException::R_FAILURE);
-        } catch (ResultException $e) {
-            $this->assertEquals(
-                ResultException::$results[ResultException::R_FAILURE][ResultException::P_MESSAGE],
-                $e->getMessage()
-            );
-        }
+        $result = new ResultException(ResultException::R_FAILURE);
+        $this->assertEquals(
+            ResultException::$results[ResultException::R_FAILURE][ResultException::P_MESSAGE],
+            $result->getMessage()
+        );
     }
 
     public function testSuccessMessage()
     {
-        try {
-            throw new ResultException(ResultException::R_SUCCESS);
-        } catch (ResultException $e) {
-            $this->assertEquals(
-                ResultException::$results[ResultException::R_SUCCESS][ResultException::P_MESSAGE],
-                $e->getMessage()
-            );
-        }
+        $result = new ResultException(ResultException::R_SUCCESS);
+        $this->assertEquals(
+            ResultException::$results[ResultException::R_SUCCESS][ResultException::P_MESSAGE],
+            $result->getMessage()
+        );
     }
 
     public function testCustomStatus()
     {
-        try {
-            throw new ResultException(
-                ResultException::TEST_E,
-                array(ResultException::P_STATUS => ResultException::STATUS_CUSTOM)
-            );
-        } catch (ResultException $e) {
-            $this->assertTrue($e->isCustomStatus());
-        }
+        $result = new ResultException(
+            ResultException::TEST_E,
+            [ResultException::P_STATUS => ResultException::STATUS_CUSTOM]
+        );
+        $this->assertTrue($result->isCustomStatus());
+        $result->setStatus(ResultException::STATUS_ERROR);
+        $this->assertTrue($result->isError());
     }
 
     public function testAdminMessage()
     {
-        try {
-            throw new ResultException(ResultException::TEST_E_ADMIN_MESSAGE);
-        } catch (ResultException $e) {
-            $this->assertEquals(
-                ResultException::$results[ResultException::TEST_E_ADMIN_MESSAGE][ResultException::P_MESSAGE_ADMIN],
-                $e->getMessageAdmin()
-            );
-        }
+        $result = new ResultException(ResultException::TEST_E_ADMIN_MESSAGE);
+        $this->assertEquals(
+            ResultException::$results[ResultException::TEST_E_ADMIN_MESSAGE][ResultException::P_MESSAGE_ADMIN],
+            $result->getMessageAdmin()
+        );
+
+    }
+
+    public function testStringData()
+    {
+        $result = new ResultException(ResultException::TEST_STRING);
+        $this->assertEquals('I am just string', $result->getMessage());
     }
 
     public function testFactory()
@@ -184,5 +168,122 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
     {
         $code = ResultException::buildGlobalCode(ResultException::R_SUCCESS);
         $this->assertEquals(ResultException::R_SUCCESS, $code);
+    }
+
+    public function testMsgArg()
+    {
+        $result = new ResultException(ResultException::R_SUCCESS,
+            [
+                ResultException::P_MESSAGE => 'Test %s',
+                ResultException::P_MESSAGE_ARG => 'argument'
+            ]);
+        $this->assertEquals('Test argument', $result->getMessage());
+    }
+
+    public function testMsgArgMissingFormat()
+    {
+        $result = new ResultException(ResultException::R_SUCCESS,
+            [
+                ResultException::P_MESSAGE => 'Test',
+                ResultException::P_MESSAGE_ARG => ['argument']
+            ]);
+        $this->assertStringEndsWith('[argument]', $result->getMessage());
+    }
+
+    public function testMsgArgNull()
+    {
+        $result = new ResultException(ResultException::R_SUCCESS,
+            [
+                ResultException::P_MESSAGE => 'Test %s',
+                ResultException::P_MESSAGE_ARG => 'argument'
+            ]);
+
+        $this->assertNull($result->setMessageArg('argument'));
+    }
+
+    public function testInnerException()
+    {
+        $innerFailure = new ResultException(ResultException::R_FAILURE);
+        $innerSuccess = new ResultException(ResultException::R_SUCCESS);
+        $result = new ResultException(ResultException::R_SUCCESS, $innerFailure);
+        $this->assertTrue($result->hasInnerException());
+        $this->assertTrue($result->getInnerException()->isFailure());
+        $this->assertInstanceOf('\\Result\\ResultException', $result->getInnerException());
+        // Change exception
+        $result->setInnerException($innerSuccess);
+        $this->assertTrue($result->getInnerException()->isSuccess());
+    }
+
+    public function testGettersAndSetters()
+    {
+        $result = new ResultException(ResultException::R_SUCCESS,
+            [
+                'foo' => 'bar'
+            ]);
+
+        $this->assertEquals('bar', $result->foo);
+        $this->assertNull($result->bar);
+        $this->assertFalse(isset($result->bar));
+        $result->bar = 'foo';
+        $this->assertEquals('foo', $result->bar);
+        unset($result->foo);
+        $this->assertNull($result->foo);
+    }
+
+    public function testArrayAccess()
+    {
+        $result = new ResultException(ResultException::R_SUCCESS,
+            [
+                'foo' => 'bar'
+            ]);
+
+        $this->assertArrayHasKey('foo', $result);
+        $this->assertEquals('bar', $result['foo']);
+        $this->assertArrayNotHasKey('bar', $result);
+        $this->assertFalse(isset($result['bar']));
+        $result['bar'] = 'foo';
+        $this->assertEquals('foo', $result['bar']);
+        unset($result['foo']);
+        $this->assertNull($result['foo']);
+    }
+
+    public function testMsgAdmin()
+    {
+        $result = new ResultException(ResultException::R_SUCCESS,
+            [
+                ResultException::P_MESSAGE_ADMIN => 'Admin message'
+            ]);
+
+        $this->assertEquals('Admin message', $result->getMessageAdmin());
+        $result->setMessageAdmin('New admin message');
+        $this->assertStringStartsWith('New', $result->getMessageAdmin());
+    }
+
+    public function testTranslator()
+    {
+        ResultException::setTranslatorFunction('\\Result\\Test\\ResultException::t');
+        $result = new ResultException(ResultException::TEST_TRANSLATE_STRING);
+        $this->assertStringEndsWith('-translated', $result->getMessage());
+    }
+
+    public function testData()
+    {
+        $result = new ResultException(ResultException::R_SUCCESS,
+            [
+                'foo' => 'bar'
+            ]);
+        $this->assertEquals(1, $result->countData());
+        $this->assertArrayHasKey('foo', $result->getData(null));
+        $this->assertArrayHasKey('foo', $result->addData(null));
+        $result->clearData();
+        $this->assertEquals(0, $result->countData());
+    }
+
+    /**
+     * @expectedException \Result\RuntimeException
+     */
+    public function testClassIndexError()
+    {
+         ResultException::getClassIndex('Unknown');
     }
 }

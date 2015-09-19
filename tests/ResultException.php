@@ -7,6 +7,8 @@ class ResultException extends \Result\ResultException
 {
 
     const TEST_E = 900;
+    const TEST_STRING = 5;
+    const TEST_TRANSLATE_STRING = 6;
     const TEST_E_ADMIN_MESSAGE = 901;
 
     const STATUS_CUSTOM = 'custom';
@@ -35,11 +37,18 @@ class ResultException extends \Result\ResultException
                 self::P_MESSAGE => 'Internal error',
                 self::P_STATUS  => self::STATUS_ERROR,
                 self::P_MESSAGE_ADMIN => 'Internal message for admin with additional info'
-            )
+            ),
+            self::TEST_STRING => 'I am just string'
+
         ];
 
     public function isCustomStatus()
     {
         return ($this->status === self::STATUS_CUSTOM);
+    }
+
+    public static function t($key)
+    {
+        return strtolower($key . '-translated');
     }
 }

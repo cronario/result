@@ -82,7 +82,7 @@ class ResultException extends BaseException
 
     protected $innerException;
     /**
-     * @var string
+     * @var string|array
      */
     protected $status = self::STATUS_FAILURE;
     /**
@@ -205,8 +205,8 @@ class ResultException extends BaseException
     }
 
     /**
-     * @param      $result
-     * @param null $code
+     * @param ResultException|string $result Result instance or class name
+     * @param null|int $code
      *
      * @return int
      */
@@ -228,12 +228,12 @@ class ResultException extends BaseException
 
         $resultCode = ($resultClassIndex * 1000) + $resultCode;
 
-        return $resultCode;
+        return (int)$resultCode;
     }
 
     /** Returns class index by class name
      *
-     * @param $class string Name of class
+     * @param string $class Name of class
      *
      * @throws RuntimeException
      * @return null|int
@@ -270,7 +270,7 @@ class ResultException extends BaseException
     }
 
     /**
-     * @param $object
+     * @param ResultException $object
      *
      * @return mixed
      */
@@ -404,11 +404,11 @@ class ResultException extends BaseException
     }
 
     /**
-     * @param      $globalCode
+     * @param $globalCode
      * @param null $data
      *
      * @return ResultException
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public static function factory($globalCode, $data = null)
     {
@@ -472,7 +472,7 @@ class ResultException extends BaseException
     }
 
     /**
-     * @return int|string
+     * @return int
      */
     public function getGlobalCode()
     {
@@ -496,6 +496,9 @@ class ResultException extends BaseException
         return $result;
     }
 
+    /**
+     * @return string
+     */
     public function getMessageAdmin()
     {
         if ($this->messageAdmin === null) {
@@ -505,7 +508,10 @@ class ResultException extends BaseException
         return $this->messageAdmin;
     }
 
-    protected function setMessageAdmin($message)
+    /**
+     * @param string $message Message for admin
+     */
+    public function setMessageAdmin($message)
     {
         $this->messageAdmin = $message;
     }
@@ -518,6 +524,9 @@ class ResultException extends BaseException
         return $message;
     }
 
+    /**
+     * @return \Exception
+     */
     public function getInnerException()
     {
         return $this->innerException;
@@ -591,9 +600,7 @@ class ResultException extends BaseException
         return !empty($this->data[self::P_IGNORE_LOGGING]);
     }
 
-    /**
-     *
-     */
+
     public function clearData()
     {
         $this->data = [];
@@ -632,13 +639,13 @@ class ResultException extends BaseException
     }
 
     /**
-     * @param $key String
+     * @param string $key String
      *
      * @return string
      */
     protected static function translate($key)
     {
-        if (function_exists(static::getTranslatorFunction())) {
+        if (is_callable(static::getTranslatorFunction())) {
             $translated = call_user_func(static::getTranslatorFunction(), $key);
             return $translated;
         } else {

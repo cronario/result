@@ -10,7 +10,7 @@ use SplFileObject;
 /**
  * Class ResultMap
  *
- * @package Ik\Lib
+ * @package Cronario\Result
  */
 class MapBuilder
 {
@@ -20,7 +20,7 @@ class MapBuilder
     /**
      * Build result map in provided path and write result to file
      *
-     * @param       $file
+     * @param string $file
      * @param array|string $searchPath
      */
     public static function build($file, $searchPath)

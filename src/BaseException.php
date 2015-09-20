@@ -4,7 +4,7 @@
 namespace Result;
 
 /**
- * @package Ik\Exception
+ * @package Cronario\Result
  */
 class BaseException extends \Exception implements ExceptionInterface
 {

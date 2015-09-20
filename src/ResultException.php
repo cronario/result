@@ -9,7 +9,7 @@ use ArrayAccess;
 /**
  * Class ResultException
  *
- * @package Ik\Exception
+ * @package Cronario\Result
  */
 class ResultException extends BaseException implements ArrayAccess, ExceptionInterface
 {

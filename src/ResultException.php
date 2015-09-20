@@ -20,11 +20,11 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
     const R_SUCCESS = 0;
     const R_FAILURE = 2;
     const E_INTERNAL = 4;
-    const P_ALIAS = 'als';
-    const P_MESSAGE = 'msg';
-    const P_MESSAGE_ADMIN = 'msgAdm';
-    const P_MESSAGE_ARG = 'msgArg';
-    const P_STATUS = 'sts';
+    const P_ALIAS = 'alias';
+    const P_MESSAGE = 'message';
+    const P_MESSAGE_ADMIN = 'messageAdmin';
+    const P_MESSAGE_ARG = 'messageArg';
+    const P_STATUS = 'status';
     const P_IGNORE_LOGGING = 'igl';
     /******************************************************************************
      * MAIN
@@ -117,19 +117,11 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
             return $this;
         }
 
-        // Check code range & exists as const
-        if ($code > 1000) {
-            throw new OutOfRangeException("Result code [$code] out of range");
-        } elseif (false === $this->getConstant($this->code)) {
-            throw new InvalidArgumentException("Invalid result code [$code]");
-        }
+        $this->checkResultCode($code);
 
         $this->globalCode = self::buildGlobalCode($this);
 
-        // Init message if it was not present in result data
-        if (empty($this->message)) {
-            $this->message = self::buildMessage($this);
-        }
+        $this->initMessage();
         $this->initResultData($data);
 
         if ($innerException instanceof \Exception) {
@@ -249,13 +241,15 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
     }
 
     /**
+     * Try to translate message using translator,
+     * otherwise returns alias or constant name
+     *
      * @param ResultException $result
      *
      * @return string $message Result message
      */
     public static function buildMessage(ResultException $result)
     {
-        // try to translate message
         $translateKey = self::TRANSLATE_KEY_PREFIX . $result->globalCode;
         $message = self::translate($translateKey);
 
@@ -307,24 +301,15 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
      */
     public function setData($key, $value)
     {
-        if ($key === self::P_MESSAGE) {
-            return $this->message = $value;
+        if (property_exists($this, $key)) {
+            return $this->{$key} = $value;
         }
 
         /**
-         * This should ne after initialized message,
-         * because
+         * This should be after initialized message
          */
         if ($key === self::P_MESSAGE_ARG) {
             return $this->setMessageArg($value);
-        }
-
-        if ($key === self::P_MESSAGE_ADMIN) {
-            return $this->messageAdmin = $value;
-        }
-
-        if ($key === self::P_STATUS) {
-            return $this->status = $value;
         }
 
         $this->data[$key] = $value;
@@ -370,7 +355,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
     }
 
     /**
-     * @param $key
+     * @param array|string $key Key or keys to be unset
      */
     public function unsetData($key)
     {
@@ -753,6 +738,31 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
             $this->setMessageArg($data);
         } elseif ($data instanceof \Exception) {
             $this->setInnerException($data);
+        }
+    }
+
+    /**
+     * @param $code
+     *
+     * @throws InvalidArgumentException
+     * @throws OutOfRangeException
+     */
+    protected function checkResultCode($code)
+    {
+        if ($this->code > 1000) {
+            throw new OutOfRangeException("Result code [$code] out of range");
+        } elseif (false === $this->getConstant($this->code)) {
+            throw new InvalidArgumentException("Invalid result code [$code]");
+        }
+    }
+
+    /**
+     * Init message if it was not present in result data
+     */
+    protected function initMessage()
+    {
+        if (empty($this->message)) {
+            $this->message = self::buildMessage($this);
         }
     }
 }

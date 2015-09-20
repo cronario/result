@@ -197,7 +197,7 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
                 ResultException::P_MESSAGE => 'Test %s',
                 ResultException::P_MESSAGE_ARG => 'argument'
             ]);
-
+        $result->setMessageArg('argument');
         $this->assertEquals('Test argument', $result->getMessage());
     }
 
@@ -216,7 +216,8 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
     public function testInnerException()
     {
         $innerFailure = new ResultException(ResultException::R_FAILURE);
-        $innerSuccess = new ResultException(ResultException::R_SUCCESS);
+        // let's set exception as 3-d parameter
+        $innerSuccess = new ResultException(ResultException::R_SUCCESS, null, $innerFailure);
         $result = new ResultException(ResultException::R_SUCCESS, $innerFailure);
         $this->assertTrue($result->hasInnerException());
         $this->assertTrue($result->getInnerException()->isFailure());

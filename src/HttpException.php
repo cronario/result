@@ -11,7 +11,7 @@ class HttpException extends ResultException
     const HTTP_OK = 200;
     const HTTP_CREATED = 201;
     const HTTP_ACCEPTED = 202;
-    const HTTP_NONAUTHORITATIVE_INFORMATION = 203;
+    const HTTP_NON_AUTHORITATIVE_INFORMATION = 203;
     const HTTP_NO_CONTENT = 204;
     const HTTP_RESET_CONTENT = 205;
     const HTTP_PARTIAL_CONTENT = 206;
@@ -73,7 +73,7 @@ class HttpException extends ResultException
                 'msg'      => 'Accepted',
                 'httpCode' => 202,
             ),
-            self::HTTP_NONAUTHORITATIVE_INFORMATION    => array(
+            self::HTTP_NON_AUTHORITATIVE_INFORMATION    => array(
                 'msg'      => 'Non-Authoritative Information',
                 'httpCode' => 203,
             ),

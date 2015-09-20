@@ -11,8 +11,7 @@ use ArrayAccess;
  *
  * @package Ik\Exception
  */
-class ResultException extends BaseException
-    implements ArrayAccess, ExceptionInterface
+class ResultException extends BaseException implements ArrayAccess, ExceptionInterface
 {
     /******************************************************************************
      * RESULTS
@@ -42,11 +41,11 @@ class ResultException extends BaseException
     const STATUS_FAILURE = 'failure';
     const STATUS_ERROR = 'error';
 
-    static public $resultClassIndexMap;
+    public static $resultClassIndexMap;
     /**
      * @var array
      */
-    static public $results
+    public static $results
         = [
             self::R_SUCCESS  => array(
                 self::P_MESSAGE => 'Success',
@@ -61,13 +60,19 @@ class ResultException extends BaseException
                 self::P_STATUS  => self::STATUS_ERROR,
             ),
         ];
+
     /******************************************************************************
      * REFLECTION
      ******************************************************************************/
 
-    static protected $reflections;
-    static protected $reflectionConstants;
-    static protected $translatorFunction = '_t';
+    protected static $reflections;
+    protected static $reflectionConstants;
+    protected static $translatorFunction = '_t';
+
+    /**
+     * @var array Arguments which will be unset from result data
+     */
+    protected $serviceArguments = [self::P_STATUS, self::P_MESSAGE];
 
     protected $messageAdmin;
     /**
@@ -106,70 +111,33 @@ class ResultException extends BaseException
         if ($code === null) {
             throw new InvalidArgumentException("Empty result code arg");
         } elseif (is_int($code)) {
-            $this->code = $code;
-            if (isset(static::$results[$code])
-                && self::R_SUCCESS !== $code
-            ) {
-                $this->initData(static::$results);
-            } elseif (isset(self::$results[$code])) {
-                $this->initData(self::$results);
-            }
+            $this->extractResultData($code);
         } elseif ($code instanceof \Exception) {
-            $this->status = self::STATUS_ERROR;
-            $this->code = self::E_INTERNAL;
-            $this->message = $code->getMessage();
-            $this->setData('innerCode', $code->getCode());
-            $this->globalCode = self::buildGlobalCode($this);
+            $this->extractDataFromException($code);
             return $this;
         }
 
         // Check code range & exists as const
         if ($code > 1000) {
             throw new OutOfRangeException("Result code [$code] out of range");
-        } elseif ($this->getConstant($this->code) === false) {
+        } elseif (false === $this->getConstant($this->code)) {
             throw new InvalidArgumentException("Invalid result code [$code]");
         }
 
-        // Build global code
         $this->globalCode = self::buildGlobalCode($this);
 
-        // Init message
+        // Init message if it was not present in result data
         if (empty($this->message)) {
             $this->message = self::buildMessage($this);
         }
+        $this->initResultData($data);
 
-        // PreInit message arg
-        if ($this->hasData(self::P_MESSAGE_ARG)) {
-            $messageArg = $this->getData(self::P_MESSAGE_ARG);
-        }
-
-        // Init data
-        if (is_array($data)) {
-            $this->addData($data);
-        } elseif (is_string($data)) {
-            $messageArg = $data;
-        } elseif ($data instanceof \Exception && $innerException === null) {
-            $innerException = $data;
-        }
-
-        // Init message arg
-        if (!empty($messageArg)) {
-            $this->setMessageArg($messageArg);
-        }
-
-        // Init status
-        if ($this->hasData(self::P_STATUS)) {
-            $this->status = $this->getData(self::P_STATUS);
-        }
-
-        // Unset system properties
-        $this->unsetData(self::P_MESSAGE);
-        $this->unsetData(self::P_STATUS);
-
-        // Init Previous exception
         if ($innerException instanceof \Exception) {
             $this->setInnerException($innerException);
         }
+
+        $this->unsetData($this->serviceArguments);
+        parent::__construct($this->getMessage(), $this->getCode(), $innerException);
     }
 
     /**
@@ -339,16 +307,24 @@ class ResultException extends BaseException
      */
     public function setData($key, $value)
     {
-        if ($key === self::P_MESSAGE_ARG) {
-            return $this->setMessageArg($value);
-        }
-
         if ($key === self::P_MESSAGE) {
             return $this->message = $value;
         }
 
+        /**
+         * This should ne after initialized message,
+         * because
+         */
+        if ($key === self::P_MESSAGE_ARG) {
+            return $this->setMessageArg($value);
+        }
+
         if ($key === self::P_MESSAGE_ADMIN) {
             return $this->messageAdmin = $value;
+        }
+
+        if ($key === self::P_STATUS) {
+            return $this->status = $value;
         }
 
         $this->data[$key] = $value;
@@ -368,6 +344,10 @@ class ResultException extends BaseException
             $messageArg = [$messageArg];
         }
 
+        /**
+         * Check on empty argument and check if
+         * passed argument is not equal to existence
+         */
         if (empty($messageArg)
             || $this->getData(self::P_MESSAGE_ARG) === $messageArg
         ) {
@@ -394,7 +374,10 @@ class ResultException extends BaseException
      */
     public function unsetData($key)
     {
-        unset($this->data[$key]);
+        $keys = (array) $key;
+        foreach ($keys as $key) {
+            unset($this->data[$key]);
+        }
     }
 
     /**
@@ -730,5 +713,46 @@ class ResultException extends BaseException
     public function offsetUnset($offset)
     {
         $this->unsetData($offset);
+    }
+
+    /**
+     * @param int $code Result code
+     */
+    protected function extractResultData($code)
+    {
+        $this->code = $code;
+        if (isset(static::$results[$code])
+            && self::R_SUCCESS !== $code
+        ) {
+            $this->initData(static::$results);
+        } elseif (isset(self::$results[$code])) {
+            $this->initData(self::$results);
+        }
+    }
+
+    /**
+     * @param \Exception $code
+     */
+    protected function extractDataFromException($code)
+    {
+        $this->status = self::STATUS_ERROR;
+        $this->code = self::E_INTERNAL;
+        $this->message = $code->getMessage();
+        $this->setData('innerCode', $code->getCode());
+        $this->globalCode = self::buildGlobalCode($this);
+    }
+
+    /**
+     * @param $data
+     */
+    protected function initResultData($data)
+    {
+        if (is_array($data)) {
+            $this->addData($data);
+        } elseif (is_string($data)) {
+            $this->setMessageArg($data);
+        } elseif ($data instanceof \Exception) {
+            $this->setInnerException($data);
+        }
     }
 }

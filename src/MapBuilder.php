@@ -84,7 +84,7 @@ class MapBuilder
 
     /**
      * Add new result class to map.
-     * If file is empty begin numeratiomn from index 1.
+     * If file is empty begin numeration from index 1.
      * Zero index reserved for \Result\ResultException
      *
      * @param $class

@@ -3,6 +3,11 @@
 
 namespace Result;
 
+/**
+ * Class HttpException
+ *
+ * @package Result
+ */
 class HttpException extends ResultException
 {
     const HTTP_CONTINUE = 100;

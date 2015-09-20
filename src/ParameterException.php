@@ -3,6 +3,11 @@
 namespace Result;
 
 
+/**
+ * Class ParameterException
+ *
+ * @package Result
+ */
 class ParameterException extends ResultException
 {
     const E_PARAM_NOT_SET = 101;

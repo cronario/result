@@ -8,9 +8,9 @@ use RegexIterator;
 use SplFileObject;
 
 /**
- * Class ResultMap
+ * Class MapBuilder
  *
- * @package Cronario\Result
+ * @package Result
  */
 class MapBuilder
 {
@@ -35,15 +35,8 @@ class MapBuilder
         self::readMap();
 
         foreach ((array)$searchPath as $folder) {
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($folder,
-                    \RecursiveDirectoryIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::SELF_FIRST,
-                \RecursiveIteratorIterator::CATCH_GET_CHILD // Ignore "Permission denied"
-            );
-
-            $files = new RegexIterator($iterator, '/^.+Exception\.php$/i',
-                RecursiveRegexIterator::GET_MATCH);
+            $iterator = self::getIterator($folder);
+            $files = new RegexIterator($iterator, '/^.+Exception\.php$/i', RecursiveRegexIterator::GET_MATCH);
 
             /**
              * @var  $file \SplFileInfo
@@ -136,5 +129,21 @@ class MapBuilder
     {
         $fileData = include self::$_file;
         self::$_map = !is_array($fileData) ? self::$_map : $fileData;
+    }
+
+    /**
+     * @param $folder
+     *
+     * @return \RecursiveIteratorIterator
+     */
+    protected static function getIterator($folder)
+    {
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($folder,
+                \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST,
+            \RecursiveIteratorIterator::CATCH_GET_CHILD // Ignore "Permission denied"
+        );
+        return $iterator;
     }
 }

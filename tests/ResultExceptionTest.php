@@ -7,16 +7,51 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
 {
 
     protected static $_code;
+    private static $filename;
+    private static $resultMap;
 
     protected function setUp()
     {
         self::$_code['unknown'] = 999;
         self::$_code['outOfRange'] = 9999;
         self::$_code['globalCode'] = 2900;
-
-        \Result\ResultException::setClassIndexMap([
+        self::$filename = sys_get_temp_dir() . '/' . uniqid() . '.php';
+        self::$resultMap = [
             'Result\Test\ResultException' => 2
-        ]);
+        ];
+        file_put_contents(self::$filename, "<?php \n return " . var_export(self::$resultMap, true) . ";");
+    }
+
+    /**
+     * @expectedException \Result\InvalidArgumentException
+     */
+    public function testGetClassIndexMap()
+    {
+        ResultException::getClassIndexMap();
+    }
+
+    /**
+     * @expectedException \Result\RuntimeException
+     */
+    public function testSetClassIndexMapEx()
+    {
+        ResultException::setClassIndexMap('foo');
+    }
+
+    /**
+     * This should be in setUp, but getClassIndexMap
+     * can not be tested
+     *
+     * @throws \Result\RuntimeException
+     */
+    public function testSetClassIndexMap()
+    {
+        \Result\ResultException::setClassIndexMap(self::$filename);
+        $this->assertEquals(self::$resultMap, \Result\ResultException::getClassIndexMap());
+
+        \Result\ResultException::setClassIndexMap(self::$resultMap);
+
+        $this->assertCount(1, ResultException::getClassIndexMap());
     }
 
     /**
@@ -129,7 +164,7 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
         $str = 'Some exception';
         try {
             throw new \Exception($str);
-        } catch (\Exception $ex){
+        } catch (\Exception $ex) {
             $result = new ResultException($ex);
             $this->assertEquals($str, $result->getMessage());
             $this->assertEquals(ResultException::STATUS_ERROR, $result->getStatus());
@@ -174,7 +209,7 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
     {
         $result = new ResultException(ResultException::TEST_RESULT,
             [
-                ResultException::P_MESSAGE => 'Test %s',
+                ResultException::P_MESSAGE     => 'Test %s',
                 ResultException::P_MESSAGE_ARG => 'argument'
             ]);
         $this->assertEquals('Test argument', $result->getMessage());
@@ -184,7 +219,7 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
     {
         $result = new ResultException(ResultException::TEST_RESULT,
             [
-                ResultException::P_MESSAGE => 'Test',
+                ResultException::P_MESSAGE     => 'Test',
                 ResultException::P_MESSAGE_ARG => 'argument'
             ]);
         $this->assertStringEndsWith('[argument]', $result->getMessage());
@@ -194,7 +229,7 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
     {
         $result = new ResultException(ResultException::TEST_RESULT,
             [
-                ResultException::P_MESSAGE => 'Test %s',
+                ResultException::P_MESSAGE     => 'Test %s',
                 ResultException::P_MESSAGE_ARG => 'argument'
             ]);
         $result->setMessageArg('argument');
@@ -290,7 +325,7 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
      */
     public function testClassIndexError()
     {
-         ResultException::getClassIndex('Unknown');
+        ResultException::getClassIndex('Unknown');
     }
 
     public function testIgnoreLogging()

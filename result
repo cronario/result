@@ -78,4 +78,4 @@ if (isset($options['search'])) {
 }
 
 
-\Ik\Lib\ResultMapBuilder::build($output, $search);
+\Result\MapBuilder::build($output, $search);

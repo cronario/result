@@ -26,7 +26,7 @@ class MapBuilder
     public static function build($file, $searchPath)
     {
         $searchPath = empty($searchPath) ? __DIR__ : $searchPath;
-        $searchPath = (array)$searchPath;
+        $searchPath = (array) $searchPath;
 
         $includePath = implode(PATH_SEPARATOR, $searchPath);
         set_include_path($includePath . get_include_path());
@@ -34,7 +34,7 @@ class MapBuilder
         self::setFile($file);
         self::readMap();
 
-        foreach ((array)$searchPath as $folder) {
+        foreach ((array) $searchPath as $folder) {
             $iterator = self::getIterator($folder);
             $files = new RegexIterator($iterator, '/^.+Exception\.php$/i', RecursiveRegexIterator::GET_MATCH);
 
@@ -42,28 +42,23 @@ class MapBuilder
              * @var  $file \SplFileInfo
              */
             foreach ($files as $file) {
-                try {
-                    $file = $file[0];
-                    $className = basename($file, '.php');
-                    $file = new SplFileObject($file);
-                    $namespace = null;
-                    foreach ($file as $line) {
-                        if (preg_match('/^namespace (?P<namespace>.*);$/i',
-                            $line, $matches)) {
-                            $namespace = ($matches['namespace']);
-                            continue;
-                        }
+                $file = $file[0];
+                $className = basename($file, '.php');
+                $file = new SplFileObject($file);
+                $namespace = null;
+                foreach ($file as $line) {
+                    if (preg_match('/^namespace (?P<namespace>.*);$/i',
+                        $line, $matches)) {
+                        $namespace = ($matches['namespace']);
+                        continue;
                     }
-                    if (null !== $namespace) {
-                        $class = $namespace . '\\' . $className;
-                        $reflection = new ReflectionClass($class);
-                        if ($reflection->isSubclassOf('\\Result\\ResultException')) {
-                            self::addResult($class);
-                        }
+                }
+                if (null !== $namespace) {
+                    $class = $namespace . '\\' . $className;
+                    $reflection = new ReflectionClass($class);
+                    if ($reflection->isSubclassOf('\\Result\\ResultException')) {
+                        self::addResult($class);
                     }
-                } catch (\Exception $e) {
-                    echo $e;
-                    continue;
                 }
             }
         }

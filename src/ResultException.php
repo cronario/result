@@ -97,8 +97,8 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
 
     /**
      * @param string|int|\Exception $code
-     * @param null                  $data
-     * @param \Exception|null       $innerException
+     * @param null $data
+     * @param \Exception|null $innerException
      *
      * @throws InvalidArgumentException
      * @throws OutOfRangeException
@@ -124,12 +124,10 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
         $this->initMessage();
         $this->initResultData($data);
 
-        if ($innerException instanceof \Exception) {
-            $this->setInnerException($innerException);
-        }
+        $this->initInnerException($innerException);
 
         $this->unsetData($this->serviceArguments);
-        parent::__construct($this->getMessage(), $this->getCode(), $innerException);
+        return parent::__construct($this->getMessage(), $this->getCode(), $innerException);
     }
 
     /**
@@ -151,7 +149,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
      */
     public function addData($data)
     {
-        $data = (array)$data;
+        $data = (array) $data;
 
         if (empty($data)) {
             return $this;
@@ -176,8 +174,8 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
             $resultClass = get_class($result);
             $resultCode = $result->getCode();
         } else {
-            $resultClass = (string)$result;
-            $resultCode = (int)$code;
+            $resultClass = (string) $result;
+            $resultCode = (int) $code;
         }
 
         if (self::R_SUCCESS === $resultCode) {
@@ -188,7 +186,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
 
         $resultCode = ($resultClassIndex * 1000) + $resultCode;
 
-        return (int)$resultCode;
+        return (int) $resultCode;
     }
 
     /** Returns class index by class name
@@ -325,9 +323,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
     public function setMessageArg($messageArg)
     {
 
-        if (is_string($messageArg)) {
-            $messageArg = [$messageArg];
-        }
+        $messageArg = (array) $messageArg;
 
         /**
          * Check on empty argument and check if
@@ -343,9 +339,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
 
         if ($formattedMessage === $this->message) {
             // there are no any %s so we just append params
-            foreach ($messageArg as $message) {
-                $formattedMessage .= ' [' . $message . ']';
-            }
+            $formattedMessage = ' [' . implode('] [', $messageArg) . ']';
         }
         $this->message = $formattedMessage;
 
@@ -379,7 +373,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
         }
 
         $code = $globalCode % 1000;
-        $resultClassIndex = (int)($globalCode / 1000);
+        $resultClassIndex = (int) ($globalCode / 1000);
         $resultClass = array_search($resultClassIndex,
             self::getClassIndexMap());
 
@@ -608,7 +602,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
     {
         if (is_callable(static::getTranslatorFunction())) {
             $translated = call_user_func(static::getTranslatorFunction(), $key);
-            if($key !== $translated){
+            if ($key !== $translated) {
                 return $translated;
             } else {
                 return '';
@@ -763,6 +757,13 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
     {
         if (empty($this->message)) {
             $this->message = self::buildMessage($this);
+        }
+    }
+
+    protected function initInnerException($innerException)
+    {
+        if ($innerException instanceof \Exception) {
+            $this->setInnerException($innerException);
         }
     }
 }

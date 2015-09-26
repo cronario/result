@@ -24,7 +24,7 @@ Class ResultMapBuilderTest extends \PHPUnit_Framework_TestCase
     {
         MapBuilder::build(self::$filename, __DIR__);
         $data = include self::$filename;
-        $this->assertEquals($data, MapBuilder::getResults());
+        $this->assertEquals($data, MapBuilder::getInstance()->getResults());
         $this->assertCount(1, $data);
     }
 }

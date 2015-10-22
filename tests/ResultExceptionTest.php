@@ -199,6 +199,16 @@ class ResultExceptionTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('data', $result->toArray());
     }
 
+    public function testNestedToArray()
+    {
+        $ex = ResultException::factory(ResultException::R_SUCCESS);
+        $result = new ResultException(ResultException::R_SUCCESS,$ex);
+        $arrayResult = $result->toArray();
+        $this->assertArrayHasKey('globalCode', $arrayResult);
+        $this->assertArrayHasKey('data', $arrayResult);
+        $this->assertArrayHasKey('previous', $arrayResult);
+    }
+
     public function testBuildGlobalCodeSuccess()
     {
         $code = ResultException::buildGlobalCode(ResultException::R_SUCCESS);

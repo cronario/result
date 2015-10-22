@@ -127,7 +127,7 @@ class ResultException extends BaseException implements ArrayAccess, ExceptionInt
         $this->initInnerException($innerException);
 
         $this->unsetData($this->serviceArguments);
-        return parent::__construct($this->getMessage(), $this->getCode(), $innerException);
+        parent::__construct($this->getMessage(), $this->getCode(), $this->getInnerException());
     }
 
     /**
